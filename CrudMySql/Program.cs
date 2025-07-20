@@ -11,9 +11,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-var dbHost = Environment.GetEnvironmentVariable("DB_HOST");
-var dbName = Environment.GetEnvironmentVariable("DB_NAME");
-var dbPassword = Environment.GetEnvironmentVariable("DB_SA_PASSWORD");
+var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
+var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "defaultdb";
+var dbPassword = Environment.GetEnvironmentVariable("DB_SA_PASSWORD") ?? "YourFallbackPassword";
+
+var connectionString = $"Server={dbHost};Database={dbName};User ID=sa;Password={dbPassword};Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=True";
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -26,21 +28,28 @@ builder.Services.AddControllers()
 
 //// ✅ Database Context with SQL Server and Retry Logic
 ///         For Production
-//builder.Services.AddDbContextPool<DataDbContext>(options =>
-//    options.UseSqlServer(
-//        builder.Configuration.GetConnectionString($"Data Source={dbHost};Initial Catalog={dbName};User ID=sa;Password={dbPassword}"),
-//        sqlOptions => sqlOptions.CommandTimeout((int)TimeSpan.FromMinutes(1).TotalSeconds)
-//    )
-//    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
-//);
+builder.Services.AddDbContextPool<DataDbContext>(options =>
+    options.UseSqlServer(
+        connectionString,
+        sqlOptions =>
+        {
+            sqlOptions.CommandTimeout(60);
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null
+            );
+        }
+    ).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+);
 
 //For Development
-builder.Services.AddDbContext<DataDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions => sqlOptions.EnableRetryOnFailure()
-    )
-);
+//builder.Services.AddDbContext<DataDbContext>(options =>
+//    options.UseSqlServer(
+//        builder.Configuration.GetConnectionString("DefaultConnection"),
+//        sqlOptions => sqlOptions.EnableRetryOnFailure()
+//    )
+//);
 
 builder.Services.AddScoped<IEmployeeLayer, EmployeeLayer>();
 

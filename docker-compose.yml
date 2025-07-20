@@ -31,8 +31,12 @@ services:
     networks:
       - backend
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=employeedb;Database=employeedb;User ID=sa;Password=password@12345#;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=True
+      - DB_HOST=employeedb
+      - DB_NAME=dms_employee
+      - DB_SA_PASSWORD=password@12345#
+    # environment:
+    #   - ASPNETCORE_ENVIRONMENT=Development
+    #   - ConnectionStrings__DefaultConnection=Server=employeedb;Database=employeedb;User ID=sa;Password=password@12345#;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=True
     depends_on:
       - employeedb
 
