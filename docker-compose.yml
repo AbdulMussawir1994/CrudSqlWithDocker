@@ -1,7 +1,10 @@
-version: "3.9"
+﻿version: "3.9"
 
 networks:
   backend:
+
+volumes:
+  mssqldata:   # 👈 named volume to persist SQL Server data
 
 services:
   employeedb:
@@ -14,6 +17,8 @@ services:
       - "18001:1433"
     networks:
       - backend
+    volumes:
+      - mssqldata:/var/opt/mssql  # 👈 mount volume to SQL Server data directory
     healthcheck:
       test: ["CMD", "sqlcmd", "-S", "localhost", "-U", "sa", "-P", "password@12345#", "-Q", "SELECT 1"]
       interval: 10s
@@ -32,11 +37,8 @@ services:
       - backend
     environment:
       - DB_HOST=employeedb
-      - DB_NAME=dms_employee
+      - DB_NAME=CrudSql
       - DB_SA_PASSWORD=password@12345#
-    # environment:
-    #   - ASPNETCORE_ENVIRONMENT=Development
-    #   - ConnectionStrings__DefaultConnection=Server=employeedb;Database=employeedb;User ID=sa;Password=password@12345#;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=True
     depends_on:
       - employeedb
 

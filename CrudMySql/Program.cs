@@ -14,7 +14,6 @@ var builder = WebApplication.CreateBuilder(args);
 var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
 var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "defaultdb";
 var dbPassword = Environment.GetEnvironmentVariable("DB_SA_PASSWORD") ?? "YourFallbackPassword";
-
 var connectionString = $"Server={dbHost};Database={dbName};User ID=sa;Password={dbPassword};Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=True";
 
 builder.Services.AddControllers()
