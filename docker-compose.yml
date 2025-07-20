@@ -1,0 +1,50 @@
+version: "3.9"
+
+networks:
+  backend:
+
+services:
+  employeedb:
+    container_name: employee-db
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=password@12345#
+    ports:
+      - "18001:1433"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "sqlcmd", "-S", "localhost", "-U", "sa", "-P", "password@12345#", "-Q", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  crudmysql:
+    container_name: crudmysql-api
+    image: ${DOCKER_REGISTRY-}crudmysql
+    build:
+      context: .
+      dockerfile: CrudMySql/Dockerfile
+    ports:
+      - "8002:80"
+    networks:
+      - backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=employeedb;Database=employeedb;User ID=sa;Password=password@12345#;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=True
+    depends_on:
+      - employeedb
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6381:6379"
+    networks:
+      - backend
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
